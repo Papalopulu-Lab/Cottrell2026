@@ -1,0 +1,89 @@
+---
+title: "Untitled"
+output: html_document
+date: "2026-02-05"
+---
+
+Representative example code for how dynamic time-series data was preprocessed and analysed
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(reshape2)
+library(ggsignif)
+library(readxl)
+```
+
+Data is imported in a wide format (as provided in the paper supplementary data) and then converted to a long format so it is compatible with ggplot for data visualisation downstream
+
+- Because individual time-series may start at different at absolute times, they are adjusted to cell_time by subtracting the time of the first value from every value.
+- Z-Score normalisation is performed as described in paper/SI methods.
+- Additional normalisation, scaling each time-series between 0 and 1 (zero1) to represent the its minimum and maximum intensity is also performed, as described in paper/SI methods. 
+- The mean intensity of each individual time-series value is calculated to estimate protein levels between groups.
+- Time is also scaled between each time-series' minimum and maximum time-points (stretched_time), which is used so that mean traces across an experimental group can be constructed downstream (see next chunk).
+
+```{r}
+df <- read_excel('/Users/olliecottrell/The University of Manchester Dropbox/Oliver Cottrell/Imaging/LSM880s/SUM149_Palbo/rep3_dmso.xlsx')
+
+long <- na.omit(pivot_longer(df, cols=-c(hours), names_to='cell', values_to='value'))
+
+master <- long %>%
+  group_by(cell) %>%
+  mutate(cell_time = round(hours - min(hours), 3),
+         trace_len = max(cell_time) - min(cell_time),
+         ZScore = (value - mean(value))/sd(value),
+         zero1 = ((value - min(value)) / (max(value) - min(value))) * 1,
+         mean_level = mean(value), 
+         stretched_time = (cell_time / max(cell_time))*100)
+
+master
+```
+
+Because individual time-series may have distinct lengths, interpolation must first be performed so that every time-series has an equal amount of data points. After this, values can be averaged across individual cells into a mean dataframe.
+
+```{r}
+#### Interpolation
+
+# Desired number of points
+target_length <- 100
+
+# Function to interpolate a single cell's trace
+interpolate_trace <- function(df_cell, target_length = 100) {
+  # Original time and value
+  x <- df_cell$stretched_time
+  y <- df_cell$value
+  
+  # New evenly spaced time vector
+  new_time <- seq(min(x), max(x), length.out = target_length)
+  
+  # Interpolate
+  interpolated <- approx(x = x, y = y, xout = new_time)
+  
+  # Return as data frame
+  data.frame(cell_id = unique(df_cell$cell),
+             interp_time = interpolated$x,
+             interp_value = interpolated$y)
+}
+
+# Apply to each g1 trace
+interp <- master %>%
+  group_by(cell) %>%
+  group_split() %>%
+  lapply(interpolate_trace, target_length = 100) %>%
+  bind_rows()
+
+interp
+
+
+#### Mean Trace Construction
+
+mean_trace <- aggregate(interp_value ~ interp_time, data = interp, 
+                         FUN = function(x) c(mean = mean(x), sd = sd(x)))
+  
+mean_trace <- do.call(data.frame, mean_trace) 
+  
+names(mean_trace) <- c("interp_time", "mean_value", "SD_value") 
+
+mean_trace
+```
+
