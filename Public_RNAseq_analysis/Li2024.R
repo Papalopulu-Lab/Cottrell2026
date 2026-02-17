@@ -14,7 +14,7 @@ library(dplyr)
 library(ggplot2)
 library(ggsignif)
 
-setwd("Li_2024/cancer_files_raw")
+setwd("/wd")
 
 # Read sample information
 samples <- read_csv("/cancer_files_raw/mapping_ids_patients.csv")   # path to your CSV file
