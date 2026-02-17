@@ -9,4 +9,4 @@ Time-series were further analysed by identifying peaks and dips using Peaks_dips
 
 ## Analysis of public RNAseq data
 
-Several publicly available RNA-seq datasets were analysed to examine HES1 expression in various context, to validate our findings, as described in the paper. Individual R scripts are provided here to conduct this analysis on each dataset.
+Several publicly available RNA-seq datasets were analysed to examine HES1 expression in various contexts, to validate our findings, as described in the paper. Individual R scripts are provided here to conduct this analysis on each dataset.
