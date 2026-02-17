@@ -15,7 +15,7 @@ library(dplyr)
 # /Paper_1/kallisto_output/SRR24978566_trimmed/abundance.tsv
 # Set wd to the folder that contains kallisto_output
 
-setwd("~/Paper_1/kallisto_output")
+setwd("/wd")
 
 # List all abundance.tsv files 
 files <- list.files(path = ".", pattern = "abundance.tsv$", recursive = TRUE, full.names = TRUE)
