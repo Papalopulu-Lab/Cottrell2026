@@ -15,7 +15,7 @@ library(ggsignif)
 library(dplyr)
 library(ggplot2)
 
-setwd("/Ollie")
+setwd("/wd")
 ## Create a table
 samples <- tibble::tribble(
   ~Run,           ~condition,
